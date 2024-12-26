@@ -1,0 +1,2 @@
+# Add any Python packages required by your application here
+pytest
