@@ -37,7 +37,7 @@ def test_parser_with_preprocess():
     def preprocess(line):
         return line.upper()
     
-    parser = LineParserFactory.get_parser('position', 'test', 2, preprocess)
+    parser = LineParserFactory.get_parser('position', 'test', 2, preprocess=preprocess)
     line = "some test value"
     assert parser.matched(line) == True
     assert parser.parse(line) == {'test': 'VALUE'}

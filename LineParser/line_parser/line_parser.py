@@ -11,12 +11,16 @@ class LineParser(ABC):
         pass
 
 class AbstractLineParser(LineParser):
-    def __init__(self, keyword: str, preprocess: callable=None) -> None:
+    def __init__(self, keyword: str, extra_match: callable=None, preprocess: callable=None) -> None:
         self.keyword = keyword
+        self.extra_match = extra_match
         self.preprocess = preprocess
 
     def matched(self, line: str) -> bool:
-        return self.keyword in line
+        matched = self.keyword in line
+        if self.extra_match:
+            return matched and self.extra_match(line)
+        return matched
     
     @abstractmethod
     def extract(self, line: str) -> dict:
@@ -32,8 +36,8 @@ class AbstractLineParser(LineParser):
         return self.extract(line)
     
 class PositionBasedLineParser(AbstractLineParser):
-    def __init__(self, keyword: str, pos_args: dict|int, preprocess: callable=None) -> None:
-        super().__init__(keyword, preprocess)
+    def __init__(self, keyword: str, pos_args: dict|int, extra_match: callable=None, preprocess: callable=None) -> None:
+        super().__init__(keyword, extra_match, preprocess)
         if isinstance(pos_args, int):
             self.pos_args = {keyword: pos_args}   # single position and use  keyword as key
         else:
@@ -47,8 +51,8 @@ class PositionBasedLineParser(AbstractLineParser):
         return result
     
 class RegexBasedLineParser(AbstractLineParser):
-    def __init__(self, keyword: str, regex_args: dict|str, preprocess: callable=None) -> None:
-        super().__init__(keyword, preprocess)
+    def __init__(self, keyword: str, regex_args: dict|str, extra_match: callable=None, preprocess: callable=None) -> None:
+        super().__init__(keyword, extra_match, preprocess)
         if isinstance(regex_args, str):
             self.regex = {keyword: regex_args}  # single regex and use keyword as key
         else:
@@ -62,11 +66,11 @@ class RegexBasedLineParser(AbstractLineParser):
     
 class LineParserFactory:
     @staticmethod
-    def get_parser(parser_type: str, keyword: str, args: dict|int|str, preprocess: callable=None) -> LineParser:
+    def get_parser(parser_type: str, keyword: str, args: dict|int|str, extra_match: callable=None, preprocess: callable=None) -> LineParser:
         if parser_type == 'position':
-            return PositionBasedLineParser(keyword, args, preprocess)
+            return PositionBasedLineParser(keyword, args, extra_match, preprocess)
         elif parser_type == 'regex':
-            return RegexBasedLineParser(keyword, args, preprocess)
+            return RegexBasedLineParser(keyword, args, extra_match, preprocess)
         else:
             raise ValueError(f"Invalid parser type: {parser_type}")
         
