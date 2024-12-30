@@ -52,9 +52,9 @@ class GenericLineParser(LineParser):
                 if match:
                     if len(match.groups()) > 0:
                         # we only support extract one value
-                        result[key] = match.group(1)
+                        result[key] = match.group(1).strip()
                     else:
-                        result[key] = match.group()
+                        result[key] = match.group().strip()
             else:
                 raise ValueError(f"Invalid argument type: {type(option)}")
         return result

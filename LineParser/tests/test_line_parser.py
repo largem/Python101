@@ -123,3 +123,32 @@ def test_premium_line_parser():
         "Settlement_Premium_Currency": "JPN",
         "Payment_Date": "2024/12/12",
     }
+
+
+def test_direction_line_parser():
+    test_line1 = "  We   Buy"
+    test_line2 = "We pay you at"
+
+    line_parser = factory.get_direction_line_parser()
+    assert line_parser.matched(test_line1) == True
+    assert line_parser.parse(test_line1) == {"TD_Direction": "Buy"}
+
+    assert line_parser.matched(test_line2) == False
+
+
+def test_ticket_line_parser():
+    test_line1 = "AVERAGE OPTION TICKET       123456789 ABC"
+    test_line2 = "AVERAGE OPTION TICKET - DTD      123456789 ABC"
+
+    line_parser = factory.get_ticket_line_parser()
+    assert line_parser.matched(test_line1) == True
+    assert line_parser.parse(test_line1) == {
+        "Option_Ticket": "AVERAGE OPTION TICKET",
+        "TradeId": "123456789",
+    }
+
+    assert line_parser.matched(test_line2) == True
+    assert line_parser.parse(test_line2) == {
+        "Option_Ticket": "AVERAGE OPTION TICKET - DTD",
+        "TradeId": "123456789",
+    }

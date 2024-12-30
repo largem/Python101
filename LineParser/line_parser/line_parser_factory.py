@@ -82,3 +82,21 @@ def get_premium_line_parser(premium_type: PremiumType) -> LineParser:
             )
         )
     return GenericLineParser(builder.build())
+
+
+def get_direction_line_parser() -> LineParser:
+    keyword = "We"
+    builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+    # Being lazy here, just use number of words to distinguish
+    builder.with_extra_match(lambda line: len(line.split()) == 2)
+    builder.add_key_position("TD_Direction", 1)
+    return GenericLineParser(builder.build())
+
+
+def get_ticket_line_parser() -> LineParser:
+    keyword = "TICKET"
+    builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+    builder.add_key_regex("Option_Ticket", r"(.*?)\d+")
+    builder.add_key_regex("TradeId", r"\d+")
+
+    return GenericLineParser(builder.build())
