@@ -56,27 +56,37 @@ def test_invalid_parser_type():
         LineParserFactory.get_parser("invalid", "test", 1)
 
 
-def test_generic_line_parser():
+def test_option_line_parser():
     test_line1 = "Type Call on CAD 1,234.56"
     test_line2 = "Type Down & Out Put on USD 2,345.67"
 
-    put_builder: LineParserArgumentBuilder = LineParserArgument.builder("Put on")
-    put_builder.add_key_regex("Put_Currency", r"Put on\s+([A-Z]{3})")
-    put_builder.add_key_regex("Put_Amount", r"\s+([\d,]+\.?\d*)")
-    put_builder.add_key_regex("Sub_Type", r"Type\s+(.*)\sPut")
-    put_parser = GenericLineParser(put_builder.build())
-
-    call_builder: LineParserArgumentBuilder = LineParserArgument.builder("Call on")
-    call_builder.add_key_regex("Call_Currency", r"Call on\s+([A-Z]{3}) ")
-    call_builder.add_key_regex("Call_Amount", r"\s+([\d,]+\.?\d*)")
-    call_builder.add_key_regex("Sub_Type", r"Type\s+(.*)\sCall")
-    call_builder.add_key_position("Type", 0)
-    call_parser = GenericLineParser(call_builder.build())
+    put_parser = factory.get_option_line_parser(factory.OptionType.Put)
+    call_parser = factory.get_option_line_parser(factory.OptionType.Call)
 
     assert put_parser.matched(test_line1) == False
     assert put_parser.matched(test_line2) == True
-    print(put_parser.parse(test_line2))
+    assert put_parser.parse(test_line2) == {
+        "Put_Currency": "USD",
+        "Put_Amount": "2,345.67",
+        "Sub_Type": "Down & Out",
+    }
 
     assert call_parser.matched(test_line2) == False
     assert call_parser.matched(test_line1) == True
-    print(call_parser.parse(test_line1))
+    assert call_parser.parse(test_line1) == {
+        "Call_Currency": "CAD",
+        "Call_Amount": "1,234.56",
+    }
+
+
+def test_strike_line_parser():
+    test_line1 = "Strike    0.00114USD-CAD"
+    test_line2 = "Strike    0.0334  USD-CAD"
+
+    strike_parser = factory.get_strike_line_parser()
+
+    assert strike_parser.matched(test_line1) == True
+    assert strike_parser.parse(test_line1) == {"Strike": "0.00114"}
+
+    assert strike_parser.matched(test_line2) == True
+    assert strike_parser.parse(test_line2) == {"Strike": "0.0334"}
