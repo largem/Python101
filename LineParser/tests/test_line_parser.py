@@ -26,8 +26,8 @@ def test_position_based_parser_multiple_positions():
 
 
 def test_option_line_parser():
-    test_line1 = "Type Call on CAD 1,234.56"
-    test_line2 = "Type Down & Out Put on USD 2,345.67"
+    test_line1 = "Type Call   on CAD 1,234.56"
+    test_line2 = "Type Down & Out Put     on USD 2,345.67"
 
     put_parser = factory.get_option_line_parser(factory.OptionType.Put)
     call_parser = factory.get_option_line_parser(factory.OptionType.Call)

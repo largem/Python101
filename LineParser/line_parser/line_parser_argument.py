@@ -7,11 +7,13 @@ class LineParserArgument:
         self,
         keyword: str,
         args: dict,
+        override_match: bool = False,
         extra_match: callable = None,
         preprocess: callable = None,
     ) -> None:
         self.keyword = keyword
         self.extract_options = args
+        self.override_match = override_match
         self.extra_match = extra_match
         self.preprocess = preprocess
 
@@ -22,9 +24,15 @@ class LineParserArgumentBuilder:
         self.extract_args = {}
         self.extra_match = None
         self.preprocess = None
+        self.override_match = False
 
     def with_extra_match(self, extra_match: callable) -> "LineParserArgumentBuilder":
         self.extra_match = extra_match
+        return self
+
+    def with_match(self, match_override: callable) -> "LineParserArgumentBuilder":
+        self.extra_match = match_override
+        self.override_match = True
         return self
 
     def with_preprocess(self, preprocess: callable) -> "LineParserArgumentBuilder":
@@ -49,5 +57,9 @@ class LineParserArgumentBuilder:
 
     def build(self) -> LineParserArgument:
         return LineParserArgument(
-            self.keyword, self.extract_args, self.extra_match, self.preprocess
+            self.keyword,
+            self.extract_args,
+            self.override_match,
+            self.extra_match,
+            self.preprocess,
         )

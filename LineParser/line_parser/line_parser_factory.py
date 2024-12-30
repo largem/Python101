@@ -40,10 +40,11 @@ def get_multi_value_line_parser(keyword: str, key_pos: dict) -> LineParser:
 
 
 def get_option_line_parser(option_type: OptionType) -> LineParser:
-    keyword = f"{option_type.name} on"
+    keyword = f"{option_type.name}on"
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+    builder.with_match(lambda line: keyword in line.replace(" ", ""))
     builder.add_key_regex(
-        f"{option_type.name}_Currency", keyword + rf"\s+({REGEX_CURR})"
+        f"{option_type.name}_Currency", rf"{option_type.name}\s+on\s+({REGEX_CURR})"
     )
     builder.add_key_regex(f"{option_type.name}_Amount", rf"\s+({REGEX_AMOUNT})")
     builder.add_key_regex("Sub_Type", rf"Type\s+(.*)\s{option_type.name}")

@@ -34,6 +34,8 @@ class GenericLineParser(LineParser):
         self.args = args
 
     def matched(self, line: str) -> bool:
+        if self.args.override_match:
+            return self.args.extra_match(line)
         matched = self.args.keyword in line
         if matched and self.args.extra_match:
             return self.args.extra_match(line)
