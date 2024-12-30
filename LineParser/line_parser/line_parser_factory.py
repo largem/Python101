@@ -17,6 +17,12 @@ class OptionType(Enum):
     Put = 1
 
 
+class PremiumType(Enum):
+    Native = 0
+    Counterparty = 1
+    Settlement = 2
+
+
 def get_option_line_parser(option_type: OptionType) -> LineParser:
     keyword = f"{option_type.name} on"
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
@@ -28,8 +34,34 @@ def get_option_line_parser(option_type: OptionType) -> LineParser:
     return GenericLineParser(builder.build())
 
 
-def get_strike_line_parser():
+def get_strike_line_parser() -> LineParser:
     keyword = "Strike"
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
     builder.add_key_regex(keyword, REGEX_AMOUNT)
+    return GenericLineParser(builder.build())
+
+
+def get_premium_line_parser(premium_type: PremiumType) -> LineParser:
+    keyword = (
+        f"{premium_type.name} Premium"
+        if premium_type != PremiumType.Native
+        else "Premium"
+    )
+    builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+    amount_key = "Premium_Amount"
+    currency_key = "Premium_Currency"
+    if premium_type != PremiumType.Native:
+        amount_key = f"{premium_type.name}_{amount_key}"
+        currency_key = f"{premium_type.name}_{currency_key}"
+    builder.add_key_regex(amount_key, REGEX_AMOUNT)
+    builder.add_key_regex(currency_key, rf"{REGEX_AMOUNT}\s+({REGEX_CURR})")
+    # TODO, Payment Date should have its own parser
+    builder.add_key_regex("Payment_Date", r"Payment Date:\s+(.*)")
+    if premium_type == PremiumType.Native:
+        builder.with_extra_match(
+            lambda line: not (
+                PremiumType.Counterparty.name in line
+                or PremiumType.Settlement.name in line
+            )
+        )
     return GenericLineParser(builder.build())

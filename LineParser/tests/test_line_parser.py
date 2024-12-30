@@ -90,3 +90,46 @@ def test_strike_line_parser():
 
     assert strike_parser.matched(test_line2) == True
     assert strike_parser.parse(test_line2) == {"Strike": "0.0334"}
+
+
+def test_premium_line_parser():
+    test_line1 = "Premium    0.00114 USD"
+    test_line2 = "Counterparty Premium    0.0334  CAD"
+    test_line3 = "Settlement Premium     0.0  JPN"
+    test_line4 = "Premium    0.00114 USD   Payment Date: 2024/12/10"
+    test_line5 = "Counterparty Premium    0.0334  CAD Payment Date: 2024/12/11"
+    test_line6 = "Settlement Premium     0.0  JPN Payment Date: 2024/12/12"
+
+    premium_parser = factory.get_premium_line_parser(factory.PremiumType.Native)
+    assert premium_parser.matched(test_line1) == True
+    assert premium_parser.matched(test_line2) == False
+    assert premium_parser.matched(test_line3) == False
+    assert premium_parser.matched(test_line4) == True
+    assert premium_parser.matched(test_line5) == False
+    assert premium_parser.matched(test_line6) == False
+    print(premium_parser.parse(test_line1))
+    print(premium_parser.parse(test_line4))
+
+    counterparty_premium_parser = factory.get_premium_line_parser(
+        factory.PremiumType.Counterparty
+    )
+    assert counterparty_premium_parser.matched(test_line1) == False
+    assert counterparty_premium_parser.matched(test_line2) == True
+    assert counterparty_premium_parser.matched(test_line3) == False
+    assert counterparty_premium_parser.matched(test_line4) == False
+    assert counterparty_premium_parser.matched(test_line5) == True
+    assert counterparty_premium_parser.matched(test_line6) == False
+    print(counterparty_premium_parser.parse(test_line2))
+    print(counterparty_premium_parser.parse(test_line5))
+
+    settlement_premium_parser = factory.get_premium_line_parser(
+        factory.PremiumType.Settlement
+    )
+    assert settlement_premium_parser.matched(test_line1) == False
+    assert settlement_premium_parser.matched(test_line2) == False
+    assert settlement_premium_parser.matched(test_line3) == True
+    assert settlement_premium_parser.matched(test_line4) == False
+    assert settlement_premium_parser.matched(test_line5) == False
+    assert settlement_premium_parser.matched(test_line6) == True
+    print(settlement_premium_parser.parse(test_line3))
+    print(settlement_premium_parser.parse(test_line6))
