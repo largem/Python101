@@ -3,7 +3,7 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../"))
-from line_parser.line_parser import LineParserFactory, LineParser, GenericLineParser
+from line_parser.line_parser import LineParser
 import line_parser.line_parser_factory as factory
 from line_parser.line_parser_argument import (
     LineParserArgument,
@@ -12,48 +12,17 @@ from line_parser.line_parser_argument import (
 
 
 def test_position_based_parser():
-    parser: LineParser = LineParserFactory.get_parser("position", "test", 1)
-    line = "some test value"
+    parser: LineParser = factory.get_simple_line_parser("key")
+    line = "key value"
     assert parser.matched(line) == True
-    assert parser.parse(line) == {"test": "test"}
+    assert parser.parse(line) == {"key": "value"}
 
 
 def test_position_based_parser_multiple_positions():
-    parser = LineParserFactory.get_parser("position", "key", {"first": 0, "second": 2})
-    line = "value1 key value2"
+    parser = factory.get_multi_value_line_parser("key", {"first": 1, "second": 2})
+    line = "key value1 value2"
     assert parser.matched(line) == True
     assert parser.parse(line) == {"first": "value1", "second": "value2"}
-
-
-def test_regex_based_parser():
-    parser = LineParserFactory.get_parser("regex", "number", r"\d+")
-    line = "test number 123 string"
-    assert parser.matched(line) == True
-    assert parser.parse(line) == {"number": "123"}
-
-
-def test_regex_based_parser_multiple_patterns():
-    parser = LineParserFactory.get_parser(
-        "regex", "key", {"digits": r"\d+", "word": r"[a-zA-Z]+"}
-    )
-    line = "test123key"
-    assert parser.matched(line) == True
-    assert parser.parse(line) == {"digits": "123", "word": "test"}
-
-
-def test_parser_with_preprocess():
-    def preprocess(line):
-        return line.upper()
-
-    parser = LineParserFactory.get_parser("position", "test", 2, preprocess=preprocess)
-    line = "some test value"
-    assert parser.matched(line) == True
-    assert parser.parse(line) == {"test": "VALUE"}
-
-
-def test_invalid_parser_type():
-    with pytest.raises(ValueError):
-        LineParserFactory.get_parser("invalid", "test", 1)
 
 
 def test_option_line_parser():
@@ -107,8 +76,15 @@ def test_premium_line_parser():
     assert premium_parser.matched(test_line4) == True
     assert premium_parser.matched(test_line5) == False
     assert premium_parser.matched(test_line6) == False
-    print(premium_parser.parse(test_line1))
-    print(premium_parser.parse(test_line4))
+    assert premium_parser.parse(test_line1) == {
+        "Premium_Amount": "0.00114",
+        "Premium_Currency": "USD",
+    }
+    assert premium_parser.parse(test_line4) == {
+        "Premium_Amount": "0.00114",
+        "Premium_Currency": "USD",
+        "Payment_Date": "2024/12/10",
+    }
 
     counterparty_premium_parser = factory.get_premium_line_parser(
         factory.PremiumType.Counterparty
@@ -119,8 +95,15 @@ def test_premium_line_parser():
     assert counterparty_premium_parser.matched(test_line4) == False
     assert counterparty_premium_parser.matched(test_line5) == True
     assert counterparty_premium_parser.matched(test_line6) == False
-    print(counterparty_premium_parser.parse(test_line2))
-    print(counterparty_premium_parser.parse(test_line5))
+    assert counterparty_premium_parser.parse(test_line2) == {
+        "Counterparty_Premium_Amount": "0.0334",
+        "Counterparty_Premium_Currency": "CAD",
+    }
+    assert counterparty_premium_parser.parse(test_line5) == {
+        "Counterparty_Premium_Amount": "0.0334",
+        "Counterparty_Premium_Currency": "CAD",
+        "Payment_Date": "2024/12/11",
+    }
 
     settlement_premium_parser = factory.get_premium_line_parser(
         factory.PremiumType.Settlement
@@ -131,5 +114,12 @@ def test_premium_line_parser():
     assert settlement_premium_parser.matched(test_line4) == False
     assert settlement_premium_parser.matched(test_line5) == False
     assert settlement_premium_parser.matched(test_line6) == True
-    print(settlement_premium_parser.parse(test_line3))
-    print(settlement_premium_parser.parse(test_line6))
+    assert settlement_premium_parser.parse(test_line3) == {
+        "Settlement_Premium_Amount": "0.0",
+        "Settlement_Premium_Currency": "JPN",
+    }
+    assert settlement_premium_parser.parse(test_line6) == {
+        "Settlement_Premium_Amount": "0.0",
+        "Settlement_Premium_Currency": "JPN",
+        "Payment_Date": "2024/12/12",
+    }

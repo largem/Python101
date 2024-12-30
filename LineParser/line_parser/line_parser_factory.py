@@ -23,6 +23,22 @@ class PremiumType(Enum):
     Settlement = 2
 
 
+def get_simple_line_parser(keyword: str, key: str = None, pos: int = 1) -> LineParser:
+    builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+    key = keyword if not key else key
+    builder.add_key_position(key, pos)
+    return GenericLineParser(builder.build())
+
+
+def get_multi_value_line_parser(keyword: str, key_pos: dict) -> LineParser:
+    builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+
+    for key, pos in key_pos.items():
+        builder.add_key_position(key, pos)
+
+    return GenericLineParser(builder.build())
+
+
 def get_option_line_parser(option_type: OptionType) -> LineParser:
     keyword = f"{option_type.name} on"
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
