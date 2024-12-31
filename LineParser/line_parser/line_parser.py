@@ -46,15 +46,20 @@ class GenericLineParser(LineParser):
         result = {}
         for key, option in self.args.extract_options.items():
             if isinstance(option, int):
-                result[key] = line.split()[option]
+                parts = line.split()
+                if option < len(parts):
+                    result[key] = parts[option]                
             elif isinstance(option, str):
                 match: re.Match = re.search(option, line)
                 if match:
+                    matched_value = ""
                     if len(match.groups()) > 0:
                         # we only support extract one value
-                        result[key] = match.group(1).strip()
+                        matched_value = match.group(1).strip()
                     else:
                         result[key] = match.group().strip()
+                    if len(matched_value) > 0:
+                        result[key] = matched_value
             else:
                 raise ValueError(f"Invalid argument type: {type(option)}")
         return result
