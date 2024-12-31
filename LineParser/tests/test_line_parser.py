@@ -2,6 +2,7 @@ import pytest
 import sys
 import os
 
+# start from project root
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../"))
 from line_parser.line_parser import LineParser
 import line_parser.line_parser_factory as factory
