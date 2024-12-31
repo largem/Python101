@@ -5,7 +5,7 @@ from line_parser.line_parser_argument import (
     LineParserArgumentBuilder,
     LineParserArgument,
 )
-
+from utils import string_utils as su
 
 # A regular expression pattern that matches a numeric amount, including optional commas and decimal places.
 REGEX_AMOUNT = r"[\d,]+\.?\d*"
@@ -23,6 +23,7 @@ class PremiumType(Enum):
     Settlement = 2
 
 
+# key-value pair style, but can be flexible to handle value in different positions
 def get_simple_line_parser(keyword: str, key: str = None, pos: int = 1) -> LineParser:
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
     key = keyword if not key else key
@@ -30,12 +31,20 @@ def get_simple_line_parser(keyword: str, key: str = None, pos: int = 1) -> LineP
     return GenericLineParser(builder.build())
 
 
+# extract multiple values from a line
 def get_multi_value_line_parser(keyword: str, key_pos: dict) -> LineParser:
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
 
     for key, pos in key_pos.items():
         builder.add_key_position(key, pos)
 
+    return GenericLineParser(builder.build())
+
+
+def get_regex_line_parser(keyword: str, regex: str, key: str = None) -> LineParser:
+    key = su.combine_camel_words(keyword) if not key else key
+    builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
+    builder.add_key_regex(key, regex)
     return GenericLineParser(builder.build())
 
 
@@ -59,11 +68,7 @@ def get_strike_line_parser() -> LineParser:
 
 
 def get_premium_line_parser(premium_type: PremiumType) -> LineParser:
-    keyword = (
-        f"{premium_type.name} Premium"
-        if premium_type != PremiumType.Native
-        else "Premium"
-    )
+    keyword = f"{premium_type.name} Premium" if premium_type != PremiumType.Native else "Premium"
     builder: LineParserArgumentBuilder = LineParserArgument.builder(keyword)
     amount_key = "Premium_Amount"
     currency_key = "Premium_Currency"
@@ -73,12 +78,13 @@ def get_premium_line_parser(premium_type: PremiumType) -> LineParser:
     builder.add_key_regex(amount_key, REGEX_AMOUNT)
     builder.add_key_regex(currency_key, rf"{REGEX_AMOUNT}\s+({REGEX_CURR})")
     # TODO, Payment Date should have its own parser
-    builder.add_key_regex("Payment_Date", r"Payment Date:\s+(.*)")
+    builder.add_key_regex("Payment_Date", r"Payment date:\s+(.*)")
     if premium_type == PremiumType.Native:
         builder.with_extra_match(
             lambda line: not (
                 PremiumType.Counterparty.name in line
                 or PremiumType.Settlement.name in line
+                or "Seller" in line  # this is a special line to exclude
             )
         )
     return GenericLineParser(builder.build())

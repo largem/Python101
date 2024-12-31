@@ -153,3 +153,11 @@ def test_ticket_line_parser():
         "Option_Ticket": "AVERAGE OPTION TICKET - DTD",
         "TradeId": "123456789",
     }
+
+
+def test_regex_line_parser():
+    test_line1 = "Average Type Extract All of this"
+
+    line_parser = factory.get_regex_line_parser("Average Type", r"Average Type (.*)")
+    assert line_parser.matched(test_line1) == True
+    assert line_parser.parse(test_line1) == {"Average_Type": "Extract All of this"}
