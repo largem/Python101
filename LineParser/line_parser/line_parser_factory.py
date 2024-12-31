@@ -47,7 +47,7 @@ def get_option_line_parser(option_type: OptionType) -> LineParser:
         f"{option_type.name}_Currency", rf"{option_type.name}\s+on\s+({REGEX_CURR})"
     )
     builder.add_key_regex(f"{option_type.name}_Amount", rf"\s+({REGEX_AMOUNT})")
-    builder.add_key_regex("Sub_Type", rf"Type\s+(.*)\s{option_type.name}")
+    builder.add_key_regex("Sub_Type", rf"Type\s+(.+)\s+{option_type.name}")
     return GenericLineParser(builder.build())
 
 
