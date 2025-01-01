@@ -63,7 +63,7 @@ def test_strike_line_parser():
     test_line1 = "Strike    0.00114USD-CAD"
     test_line2 = "Strike    0.0334  USD-CAD"
 
-    strike_parser = factory.get_strike_line_parser()
+    strike_parser = factory.get_regex_based_line_parser("Strike", regex=factory.REGEX_AMOUNT)
 
     assert strike_parser.matched(test_line1) == True
     assert strike_parser.parse(test_line1) == {"Strike": "0.00114"}
@@ -164,6 +164,6 @@ def test_ticket_line_parser():
 def test_regex_line_parser():
     test_line1 = "Average Type Extract All of this"
 
-    line_parser = factory.get_regex_line_parser("Average Type", r"Average Type (.*)")
+    line_parser = factory.get_regex_based_line_parser("Average Type")
     assert line_parser.matched(test_line1) == True
     assert line_parser.parse(test_line1) == {"Average_Type": "Extract All of this"}
