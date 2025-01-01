@@ -34,7 +34,7 @@ class GenericLineParser(LineParser):
         self.args = args
 
     def matched(self, line: str) -> bool:
-        if self.args.override_match:
+        if self.args.override_match():
             return self.args.extra_match(line)
         matched = self.args.keyword in line
         if matched and self.args.extra_match:
@@ -44,11 +44,11 @@ class GenericLineParser(LineParser):
     def parse(self, line: str) -> dict:
         line = self.args.preprocess(line) if self.args.preprocess else line
         result = {}
-        for key, option in self.args.extract_options.items():
+        for key, option in self.args.extract_args.items():
             if isinstance(option, int):
-                parts = line.split()
+                parts = line.split(self.args.get_split_delimiter())
                 if option < len(parts):
-                    result[key] = parts[option]                
+                    result[key] = parts[option]
             elif isinstance(option, str):
                 match: re.Match = re.search(option, line)
                 if match:

@@ -4,12 +4,22 @@ import os
 
 # start from project root
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../"))
-from line_parser.line_parser import LineParser
+from line_parser.line_parser import LineParser, GenericLineParser
 import line_parser.line_parser_factory as factory
 from line_parser.line_parser_argument import (
     LineParserArgument,
     LineParserArgumentBuilder,
 )
+
+
+def test_position_based_parser_with_different_delimiter():
+    line = "key:value"
+    builder: LineParserArgumentBuilder = LineParserArgument.builder("key")
+    builder.add_key_position("key", 1).with_split_delimiter(":")
+    parser: LineParser = GenericLineParser(builder.build())
+
+    assert parser.matched(line) == True
+    assert parser.parse(line) == {"key": "value"}
 
 
 def test_position_based_parser():
@@ -66,9 +76,9 @@ def test_premium_line_parser():
     test_line1 = "Premium    0.00114 USD"
     test_line2 = "Counterparty Premium    0.0334  CAD"
     test_line3 = "Settlement Premium     0.0  JPN"
-    test_line4 = "Premium    0.00114 USD   Payment Date: 2024/12/10"
-    test_line5 = "Counterparty Premium    0.0334  CAD Payment Date: 2024/12/11"
-    test_line6 = "Settlement Premium     0.0  JPN Payment Date: 2024/12/12"
+    test_line4 = "Premium    0.00114 USD   Payment date: 2024/12/10"
+    test_line5 = "Counterparty Premium    0.0334  CAD Payment date: 2024/12/11"
+    test_line6 = "Settlement Premium     0.0  JPN Payment date: 2024/12/12"
 
     premium_parser = factory.get_premium_line_parser(factory.PremiumType.Native)
     assert premium_parser.matched(test_line1) == True
@@ -87,9 +97,7 @@ def test_premium_line_parser():
         "Payment_Date": "2024/12/10",
     }
 
-    counterparty_premium_parser = factory.get_premium_line_parser(
-        factory.PremiumType.Counterparty
-    )
+    counterparty_premium_parser = factory.get_premium_line_parser(factory.PremiumType.Counterparty)
     assert counterparty_premium_parser.matched(test_line1) == False
     assert counterparty_premium_parser.matched(test_line2) == True
     assert counterparty_premium_parser.matched(test_line3) == False
@@ -106,9 +114,7 @@ def test_premium_line_parser():
         "Payment_Date": "2024/12/11",
     }
 
-    settlement_premium_parser = factory.get_premium_line_parser(
-        factory.PremiumType.Settlement
-    )
+    settlement_premium_parser = factory.get_premium_line_parser(factory.PremiumType.Settlement)
     assert settlement_premium_parser.matched(test_line1) == False
     assert settlement_premium_parser.matched(test_line2) == False
     assert settlement_premium_parser.matched(test_line3) == True
