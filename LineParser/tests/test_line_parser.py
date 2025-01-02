@@ -167,3 +167,13 @@ def test_regex_line_parser():
     line_parser = factory.get_regex_based_line_parser("Average Type")
     assert line_parser.matched(test_line1) == True
     assert line_parser.parse(test_line1) == {"Average_Type": "Extract All of this"}
+
+
+def test_simple_line_parser_with_extra_build():
+    test_line1 = "key value"
+    test_line2 = "not key value"
+
+    parser = factory.get_simple_line_parser("key", extra_build=factory.exclude_word("not"))
+    assert parser.matched(test_line1) == True
+    assert parser.parse(test_line1) == {"key": "value"}
+    assert parser.matched(test_line2) == False

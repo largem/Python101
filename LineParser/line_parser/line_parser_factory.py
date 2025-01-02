@@ -24,9 +24,11 @@ class PremiumType(Enum):
 
 
 # define some quick functions
-def exclude_word(builder: LineParserArgumentBuilder, *words: str) -> LineParserArgumentBuilder:
-    builder.with_extra_match(lambda line: not su.contains_any(line, words))
-    return builder
+def exclude_word(*words: str):
+    def _inner_func_(builder: LineParserArgumentBuilder, *words: str) -> None:
+        builder.with_extra_match(lambda line: not su.contains_any(line, words))
+
+    return lambda builder: _inner_func_(builder, *words)
 
 
 # key-value pair style, but can be flexible to handle value in different positions
@@ -103,7 +105,7 @@ def get_premium_line_parser(premium_type: PremiumType) -> LineParser:
     builder.add_key_regex("Payment_Date", r"Payment date:\s+(.*)")
     if premium_type == PremiumType.Native:
         # "Seller" is a special case
-        exclude_word(builder, PremiumType.Counterparty.name, PremiumType.Settlement.name, "Seller")
+        exclude_word(PremiumType.Counterparty.name, PremiumType.Settlement.name, "Seller")(builder)
 
     return GenericLineParser(builder.build())
 
